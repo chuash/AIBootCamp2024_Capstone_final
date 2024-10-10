@@ -26,7 +26,7 @@ def check_password():
         return True
     # Show input for password.
     st.text_input(
-        "Please enter password",
+        "Please enter password to proceed",
         type="password",
         on_change=password_entered,
         key="password",
