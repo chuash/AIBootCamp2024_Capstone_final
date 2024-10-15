@@ -2,19 +2,21 @@ import os
 import streamlit as st
 import tiktoken
 from dotenv import load_dotenv
+from langchain.agents.agent_types import AgentType
+from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
+from langchain_openai import ChatOpenAI
 from openai import OpenAI
 
-
-# if load_dotenv('.env'):
-# for local environment
-#    OPENAI_KEY = os.getenv('OPENAI_API_KEY')
-# else:
-#    OPENAI_KEY = st.secrets['OPENAI_API_KEY']
+if load_dotenv(".env"):
+    # for local environment
+    OPENAI_KEY = os.environ["OPENAI_API_KEY"]
+else:
+    # for streamlit community cloud environment
+    OPENAI_KEY = st.secrets["OPENAI_API_KEY"]
 
 # Pass the API Key to the OpenAI Client
-# client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-# client = OpenAI(api_key=OPENAI_KEY)
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+client = OpenAI(api_key=OPENAI_KEY)
+# client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 
 def get_embedding(input, model="text-embedding-3-small"):
@@ -127,5 +129,38 @@ def count_tokens_from_message(messages):
         int: number of tokens
     """
     encoding = tiktoken.encoding_for_model("gpt-4o-mini")
+    # Extract the contents from each message and concatenate them
     value = " ".join([x.get("content") for x in messages])
     return len(encoding.encode(value))
+
+
+def LLM_query_df(query, df, model="gpt-4o-mini", temperature=0):
+    """This function takes in user query and the dataframe in which
+    the query is to be applied on. It then passes them to the LLM to
+    provide a response.
+
+    Args:
+        query (str): input user query
+        df (pd.DataFrame): pandas dataframe to query from
+        model (str, optional): _description_. Defaults to "gpt-4o-mini".
+        temperature (int, optional): _description_. Defaults to 0.
+
+    Returns:
+        str: response from LLM
+    """
+    # initialise the LLM
+    llm = ChatOpenAI(model=model, temperature=temperature)
+    # initialise the agent
+    agent = create_pandas_dataframe_agent(
+        llm,
+        df,
+        verbose=True,
+        agent_type=AgentType.OPENAI_FUNCTIONS,
+        allow_dangerous_code=True,
+    )
+    response = agent.invoke(query)
+    # If there is no output in the returned response, inform the user accordingly
+    if response.get("output", "") == "":
+        return "The LLM is unable to provide an answer to your query. Please consider refining your query."
+    else:
+        return response.get("output", "")
