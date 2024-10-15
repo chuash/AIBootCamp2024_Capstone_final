@@ -10,12 +10,12 @@ st.write(
     "- A flowchart illustrating the process flow for each of the use cases in the application."
 )
 st.image(
-    "./images/Flow_chart1.jpg",
+    "./pages/images/Flow_chart1.jpg",
     caption="flow chart showing process flow for use case 1",
     width=1024,
 )
 st.image(
-    "./images/Flow_chart2.jpg",
+    "./pages/images/Flow_chart2.jpg",
     caption="flow chart showing process flow for use case 2",
     width=1024,
 )

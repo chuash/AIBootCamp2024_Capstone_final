@@ -1,11 +1,6 @@
 import streamlit as st
 import hmac
 
-# """
-# This file contains the common utility functions used in the Streamlit App.
-# """
-
-
 def check_password():
     """This functions provides password protection for the
     streamlit app. Returns `True` if the user had the correct password,
