@@ -46,20 +46,21 @@ def load_data(directory="./data"):
     Returns:
         _type_: relevant datasets in pandas dataframe
     """
+    filelist = [
+        "1_HDBResalePriceIndex2009_2024.csv",
+        "2_HDBMedianResalePrices2020_2024.csv",
+        "3_HDBResalePricesDetailsOct23_Oct24.csv",
+        "4_CEAAgentTransactionsSep23-Sep24.csv",
+    ]
     datalist = []
-    for file in os.listdir(directory):
+    for file in filelist:
         df = pd.read_csv(f"{directory}/" + file)
         datalist.append(df)
     return datalist[0], datalist[1], datalist[2], datalist[3]
 
 
-def filterdf(df, colname, value):
-    return df[df[colname] == value]
-
-
 # Load all relevant datasets for visualisation
 df1, df2, df3, df4 = load_data()
-st.write(df1.head())
 df3["lease_commence_date"] = df3["lease_commence_date"].astype(str)
 
 # Initialise memory for RenoChat in session_state
@@ -70,7 +71,7 @@ st.markdown(
     "#### Need help with buying HDB resale flats? You may find the following tools useful 😃"
 )
 
-col_left, col_right = st.columns([0.6, 0.4])
+col_left, col_right = st.columns([0.55, 0.45])
 
 with col_right:
     # st.write(st.session_state.chatbot_memory)
@@ -98,7 +99,7 @@ with col_right:
 with col_left:
     st.write("**1. HDB Resale Price Index from 2004Q1 (index=100 in 2009Q1)**")
     st.line_chart(df1, x="quarter", y="index", x_label="quarter", y_label="Price Index")
-    
+
     st.write(
         "**2. HDB Median Resale Prices($), by flat types, across locations and over time from 2020Q1**"
     )
@@ -138,7 +139,7 @@ with col_left:
             color="flat_type",
             stack=False,
         )
-    
+
     st.write("**3. HDB Resale Transaction Details (Oct 2023-Oct 2024)**")
     st.sidebar.write("Filters for HDB Resale Transaction Details")
     # Creating filters at the sidebar
@@ -149,19 +150,19 @@ with col_left:
         key="field_selector",
     )
     townoptions = st.sidebar.multiselect(
-        "Select the locations",
+        "Select the location(s)",
         options=df3.town.unique().tolist(),
         default=df3.town.unique().tolist(),
         key="town_selector",
     )
     monthoptions = st.sidebar.multiselect(
-        "Select the periods",
+        "Select the time period(s)",
         options=df3.month.unique().tolist(),
         default=df3.month.unique().tolist(),
         key="month_selector",
     )
     flatoptions = st.sidebar.multiselect(
-        "Select the flat types",
+        "Select the flat type(s)",
         options=df3.flat_type.unique().tolist(),
         default=df3.flat_type.unique().tolist(),
         key="flat_selector",
@@ -183,6 +184,5 @@ with col_left:
 
     if form.form_submit_button("Submit"):
         st.toast(f"Query Submitted - {user_query_HDB}")
-        response_HDB = llm.LLM_query_df(
-            user_query_HDB, df3_filter)
+        response_HDB = llm.LLM_query_df(user_query_HDB, df3_filter)
         st.write(response_HDB)
