@@ -59,6 +59,7 @@ def filterdf(df, colname, value):
 
 # Load all relevant datasets for visualisation
 df1, df2, df3, df4 = load_data()
+st.write(df1.head())
 df3["lease_commence_date"] = df3["lease_commence_date"].astype(str)
 
 # Initialise memory for RenoChat in session_state
