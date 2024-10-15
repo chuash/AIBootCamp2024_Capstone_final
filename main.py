@@ -179,7 +179,7 @@ with col_left:
 
     user_query_HDB = form.text_area(
         """Try querying the above HDB resale transaction details data in words""",
-        height=50,
+        height=30,
     )
 
     if form.form_submit_button("Submit"):
