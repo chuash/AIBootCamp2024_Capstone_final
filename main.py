@@ -4,6 +4,7 @@ from helper_functions.utility import check_password
 
 from helper_functions import llm
 from logics.renochat import chatbot_response, system_msg
+from logics import agent
 
 
 # region <--------- Streamlit App Configuration --------->
@@ -175,7 +176,7 @@ with col_midleft:
 
     if form.form_submit_button("Submit"):
         st.toast(f"Query Submitted - {user_query_HDB}")
-        response_HDB = llm.LLM_query_df(user_query_HDB, df3_filter, llm.system_msg_HDB)
+        response_HDB = agent.LLM_query_df(user_query_HDB, df3_filter, agent.system_msg_HDB)
         st.write(response_HDB)
 
 with col_midright:
@@ -195,7 +196,7 @@ with col_midright:
 
     if form.form_submit_button("Submit"):
         st.toast(f"Query Submitted - {user_query_CEA}")
-        response_CEA = llm.LLM_query_df(user_query_CEA, df4_filter, llm.system_msg_CEA)
+        response_CEA = agent.LLM_query_df(user_query_CEA, df4_filter, agent.system_msg_CEA)
         st.write(response_CEA)
 
 st.divider()
@@ -203,11 +204,10 @@ st.divider()
 col_bottomleft, col_bottomright = st.columns(2, gap='medium')
 
 with col_bottomright:
-    # st.write(st.session_state.chatbot_memory)
     form = st.form(key="renochatform")
     form.markdown("#### 3. RenoChat-Your Friendly Renovation Assistant")
 
-    user_prompt = form.text_area(
+    user_prompt_chat = form.text_area(
         """Pose your renovation related queries here and the assistant\
         will provide you with curated answers sourced from internet.
         (NB: the AI bot has been told not to entertain any\
@@ -216,10 +216,28 @@ with col_bottomright:
     )
 
     if form.form_submit_button("Submit"):
-        st.toast(f"Query Submitted - {user_prompt}")
+        st.toast(f"Query Submitted - {user_prompt_chat}")
         st.divider()
         response, memory = chatbot_response(
-            user_prompt, st.session_state["chatbot_memory"]
+            user_prompt_chat, st.session_state["chatbot_memory"]
         )
         st.session_state["chatbot_memory"] = memory
         st.write(response)
+
+with col_bottomleft:
+    form = st.form(key="ResaleSmartSearch")
+    form.markdown("#### 2. ResaleSearch-Your Intelligent Search Partner")
+
+    user_prompt_search = form.text_area(
+        """xxxxxxxxxxxxxx :""",
+        height=200, key="ResaleSmartSearch_text"
+    )
+
+    if form.form_submit_button("Submit"):
+        st.toast(f"Query Submitted - {user_prompt_search}")
+        st.divider()
+    #    response, memory = chatbot_response(
+    #        user_prompt_search, st.session_state["chatbot_memory"]
+    #    )
+    #    st.session_state["chatbot_memory"] = memory
+    #    st.write(response)
