@@ -2,9 +2,8 @@ import pandas as pd
 import streamlit as st
 from helper_functions.utility import check_password
 
-from helper_functions import llm
 from logics.renochat import chatbot_response, system_msg
-from logics import agent
+from logics import agent, rag_retrieval
 
 
 # region <--------- Streamlit App Configuration --------->
@@ -71,11 +70,9 @@ st.markdown(
     "### Need help with buying HDB resale flats? You may find the following 3 tools useful 😃"
 )
 
-st.markdown(
-    "#### 1. ResaleStats - Your Insightful Data Illustrator"
-)
+st.markdown("#### 1. ResaleStats - Your Insightful Data Illustrator")
 
-col_topleft, col_topright = st.columns(2, gap='medium')
+col_topleft, col_topright = st.columns(2, gap="medium")
 
 with col_topleft:
     # line chart
@@ -128,13 +125,13 @@ st.divider()
 
 st.write("*The following location filter applies to both tables in 1c and 1d*")
 townoptions = st.multiselect(
-        "Select the location(s)",
-        options=df3.town.unique().tolist(),
-        default=df3.town.unique().tolist(),
-        key="town_selector",
-    )
+    "Select the location(s)",
+    options=df3.town.unique().tolist(),
+    default=df3.town.unique().tolist(),
+    key="town_selector",
+)
 
-col_midleft, col_midright = st.columns(2, gap='medium')
+col_midleft, col_midright = st.columns(2, gap="medium")
 
 with col_midleft:
     st.write("**1c. HDB Resale Transaction Details (Oct 2023-Oct 2024)**")
@@ -171,37 +168,54 @@ with col_midleft:
 
     user_query_HDB = form.text_area(
         """Try querying the above HDB resale transaction details data in words""",
-        height=30, key="ResaleTxnDetails_text"
+        height=30,
+        key="ResaleTxnDetails_text",
     )
 
     if form.form_submit_button("Submit"):
         st.toast(f"Query Submitted - {user_query_HDB}")
-        response_HDB = agent.LLM_query_df(user_query_HDB, df3_filter, agent.system_msg_HDB)
-        st.write(response_HDB)
+        with st.spinner("Fetching results..."):
+            response_HDB = agent.LLM_query_df(
+                user_query_HDB, df3_filter, agent.system_msg_HDB
+            )
+            st.write(response_HDB)
 
 with col_midright:
     st.write("**1d. CEA Agent Transaction Details (Sep 2023-Oct 2024)**")
     # Subset CEA Agent Transaction Details dataset based on applied town filter
     df4_filter = df4[df4["town"].isin(townoptions)]
     # display CEA Agent Transaction Details data as table visualisation
-    st.dataframe(df4_filter, column_order=['resale_transaction_date', 'town', 'sales_agent_name', 'real_estate_company_name'], key="CEAdetails_df")
+    st.dataframe(
+        df4_filter,
+        column_order=[
+            "resale_transaction_date",
+            "town",
+            "sales_agent_name",
+            "real_estate_company_name",
+        ],
+        key="CEAdetails_df",
+    )
     # Widget for chatting with CEA Agent Transaction Details data
     form = st.form(key="CEAAgentTxnDetails")
     form.write("Chat with your data!")
 
     user_query_CEA = form.text_area(
         """Try querying the above CEA agent transaction details data in words""",
-        height=30, key="CEAAgentTxnDetails_text"
+        height=30,
+        key="CEAAgentTxnDetails_text",
     )
 
     if form.form_submit_button("Submit"):
         st.toast(f"Query Submitted - {user_query_CEA}")
-        response_CEA = agent.LLM_query_df(user_query_CEA, df4_filter, agent.system_msg_CEA)
-        st.write(response_CEA)
+        with st.spinner("Fetching results..."):
+            response_CEA = agent.LLM_query_df(
+                user_query_CEA, df4_filter, agent.system_msg_CEA, flag=False
+            )
+            st.write(response_CEA)
 
 st.divider()
 
-col_bottomleft, col_bottomright = st.columns(2, gap='medium')
+col_bottomleft, col_bottomright = st.columns(2, gap="medium")
 
 with col_bottomright:
     form = st.form(key="renochatform")
@@ -212,32 +226,45 @@ with col_bottomright:
         will provide you with curated answers sourced from internet.
         (NB: the AI bot has been told not to entertain any\
         non-renovation related queries) :""",
-        height=200, key="renochatform_text"
+        height=200,
+        key="renochatform_text",
     )
 
     if form.form_submit_button("Submit"):
         st.toast(f"Query Submitted - {user_prompt_chat}")
-        st.divider()
-        response, memory = chatbot_response(
-            user_prompt_chat, st.session_state["chatbot_memory"]
-        )
-        st.session_state["chatbot_memory"] = memory
-        st.write(response)
+        with st.spinner("Fetching results..."):
+            response, memory = chatbot_response(
+                user_prompt_chat, st.session_state["chatbot_memory"]
+            )
+            st.session_state["chatbot_memory"] = memory
+            st.write(response)
 
 with col_bottomleft:
     form = st.form(key="ResaleSmartSearch")
     form.markdown("#### 2. ResaleSearch-Your Intelligent Search Partner")
 
     user_prompt_search = form.text_area(
-        """xxxxxxxxxxxxxx :""",
-        height=200, key="ResaleSmartSearch_text"
+        """Unsure about HDB resale terms and conditions?
+        Try searching here :""",
+        height=200,
+        key="ResaleSmartSearch_text",
     )
 
     if form.form_submit_button("Submit"):
         st.toast(f"Query Submitted - {user_prompt_search}")
-        st.divider()
-    #    response, memory = chatbot_response(
-    #        user_prompt_search, st.session_state["chatbot_memory"]
-    #    )
-    #    st.session_state["chatbot_memory"] = memory
-    #    st.write(response)
+        with st.spinner("Fetching results..."):
+            response, sources = rag_retrieval.retrievalQA(
+                user_prompt_search,
+                rag_retrieval.embeddings_model,
+                rag_retrieval.system_msg_search,
+                rag_retrieval.llm_,
+            )
+            st.write(response)
+            st.divider()
+            if sources is not None:
+                for i, source in enumerate(sources):
+                    st.write(
+                        f"""*Source {i+1}*:  **Page {dict(source)['metadata']['page']}**,\
+                            "{dict(source)['page_content']}" """
+                    )
+                    st.divider()
