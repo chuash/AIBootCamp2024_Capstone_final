@@ -261,7 +261,10 @@ with col_bottomleft:
             )
             st.write(response)
             st.divider()
-            if sources is not None:
+            # if the user query is malicious or unrelated to the subject matter, skip displaying the context
+            if sources is None or "I am sorry but I don't know" in response or len(sources) == 0:
+                pass
+            else:
                 for i, source in enumerate(sources):
                     st.write(
                         f"""*Source {i+1}*:  **Page {dict(source)['metadata']['page']}**,\

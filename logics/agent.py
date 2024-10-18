@@ -14,8 +14,8 @@ system_msg_HDB = """<the_only_instruction>
     The dataset given to you has the following fields:
     month (the year and month of transaction, from Oct 2023 to Oct 2024),
     town (towns in Singapore, e.g. Ang Mo Kio, Tampines, Bishan etc),
-    flat_type (3 room, 4 room , 5 room flat etc),
-    flat_model (Model A, New Generation etc),
+    flat_type (3 room, 4 room , 5 room flat, executive etc),
+    flat_model (Model A, New Generation, Standard, Apartment etc),
     storey_range (which storey range is the transacted unit in),
     floor area, resale price, street name, block number and lease commencement date.
 
@@ -24,14 +24,14 @@ system_msg_HDB = """<the_only_instruction>
     """
 
 system_msg_CEA = """<the_only_instruction>
-    You are given a dataset on transaction details of CEA registered real estate agents, including their name, registration \
-    number and real estate agencies the agents belong to. The user query will be enclosed within <incoming-query> tag pair. \
+    You are given a dataset on HDB resale transaction records of CEA registered real estate agents across \
+    various locations in Singapore and over time periods. The user query will be enclosed within <incoming-query> tag pair. \
     Your PURPOSE is to REASON and DECIDE if the user query might be related to the dataset that you have and respond with Y or N:
     Y - if the user query is assessed to be related to the dataset
     N - otherwise
 
     The dataset given to you has the following fields:
-    sales_agent_name,
+    sales_agent_name (name of real estate sales agent),
     town (towns in Singapore, e.g. Ang Mo Kio, Tampines, Bishan etc),
     resale_transaction_date (from Sep 2023 to Sep 2024),
     sales_agent_reg_num (agent registration number),
@@ -47,7 +47,7 @@ def LLM_query_df(query, df, sys_msg, flag=True, model="gpt-4o-mini", temperature
     the query is to be applied on. It also takes in the relevant LLM system message as well as a flag
     to determine if the LLM is to be used on HDB or CEA data. It then passes the query through
     malicious activity and content relevant checks, before sending
-    the query and dataframe to the LLM to provide a response.
+    the query and dataframe to the pandas agent and LLM to provide a response.
 
     Args:
         query (str): input user query
@@ -90,7 +90,7 @@ def LLM_query_df(query, df, sys_msg, flag=True, model="gpt-4o-mini", temperature
                 "content": f"<incoming-query> {query} </incoming-query>",
             },
          ]
-    # getting response from LLM, capping the number of output token at 1.
+    # getting response from LLM, capping the number of output token at 1 (either Y or N).
     response = llm.get_completion_by_messages(messages, max_tokens=1)
     if response == "N":
         return "Sorry, query potentially unrelated to dataset. Please consider rephrasing your query."

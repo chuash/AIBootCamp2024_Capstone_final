@@ -14,7 +14,7 @@ from langchain_community.document_loaders import (
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-# embedding model to be used
+# initialise embedding model to be used for RAG
 embeddings_model = OpenAIEmbeddings(model="text-embedding-3-small")
 
 # Step 1: Loading data from external source
