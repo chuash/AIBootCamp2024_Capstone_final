@@ -1,7 +1,7 @@
-#__import__("pysqlite3")
-#import sys
+__import__("pysqlite3")
+import sys
 
-#sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
 import re
 from langchain.chains import create_retrieval_chain
@@ -34,7 +34,7 @@ system_msg_search = """<the_only_instruction>
 
 
 def query_rewrite(query, temperature=0.3):
-    """This function takes in the original user query, assesses if there is a 
+    """This function takes in the original user query, assesses if there is a
     need to rephrase, if so rewrite/rephrase the query so as to optimise the quality
     of document retrieval.
 
@@ -81,7 +81,7 @@ def retrievalQA(query, embeddings_model, sys_msg, lang_model, diversity=0.7, sim
 
     Args:
         query (str): user query input
-        embeddings_model (_type_): embedding model for RAG 
+        embeddings_model (_type_): embedding model for RAG
         sys_msg (str): system message to be passed to the LLM
         lang_model (_type_): the LLM
         diversity (float): the lambda multipler input (0-1) to maximal marginal relevance. Default to 0.7
@@ -118,7 +118,7 @@ def retrievalQA(query, embeddings_model, sys_msg, lang_model, diversity=0.7, sim
     # Setting up Cohere reranker to rerank relevant documents
     cohere_rerank = CohereRerank(model="rerank-english-v3.0", top_n=3)
     # uses embeddings to drop unrelated documents below defined similarity threshold
-    embeddings_filter = EmbeddingsFilter(embeddings=embeddings_model, 
+    embeddings_filter = EmbeddingsFilter(embeddings=embeddings_model,
                                          similarity_threshold=similarity_threshold)
     # Combining embedding filtering and reranking with base MMR search
     pipeline_compressor = DocumentCompressorPipeline(transformers=[embeddings_filter, cohere_rerank])
