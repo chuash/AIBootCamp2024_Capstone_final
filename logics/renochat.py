@@ -78,6 +78,8 @@ def chatbot_response(user_query, memory, max_output_token=300, history_max=1024)
 
     # Step 3: get LLM response to user query,limiting to specified max tokens
     response = llm.get_completion_by_messages(messages, max_tokens=max_output_token)
+    # to prevent streamlit from showing anything between $ signs as Latex when not intended to.
+    response = response.replace("$", "\\$")
 
     # Step 4: append LLM response to messages
     messages.append({"role": "assistant", "content": response})

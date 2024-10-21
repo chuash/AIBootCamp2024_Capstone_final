@@ -244,12 +244,14 @@ with col_bottomleft:
     form.markdown("#### 2. ResaleSearch-Your Intelligent Search Partner")
 
     user_prompt_search = form.text_area(
-        """Unsure about HDB resale terms and conditions?
-        Try searching here :""",
+        """Unsure about HDB resale terms and conditions, CPF grants for resale flats
+        or expenses to prepare when becoming homeowner? Try searching here :""",
         height=200,
         key="ResaleSmartSearch_text",
     )
-
+    if form.form_submit_button("Try rephrasing query with AI"):
+        with st.spinner("Generating query for your consideration"):
+            st.write(rag_retrieval.query_rewrite(user_prompt_search))
     if form.form_submit_button("Submit"):
         st.toast(f"Query Submitted - {user_prompt_search}")
         with st.spinner("Fetching results..."):
@@ -266,8 +268,10 @@ with col_bottomleft:
                 pass
             else:
                 for i, source in enumerate(sources):
+                    # to prevent streamlit from showing anything between $ signs as Latex when not intended to.
+                    retrieved_context = dict(source)['page_content'].replace("$", "\\$")
                     st.write(
-                        f"""*Source {i+1}*:  **Page {dict(source)['metadata']['page']}**,\
-                            "{dict(source)['page_content']}" """
+                        f"""*Source {i+1}*:  **Page {dict(source)['metadata']['source']}**,\
+                            \n"{retrieved_context}" """
                     )
                     st.divider()

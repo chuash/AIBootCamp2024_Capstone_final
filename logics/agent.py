@@ -113,4 +113,5 @@ def LLM_query_df(query, df, sys_msg, flag=True, model="gpt-4o-mini", temperature
     if response.get("output", "") == "":
         return "The LLM is unable to provide an answer to your query. Please consider refining your query."
     else:
-        return response.get("output", "")
+        # to prevent streamlit from showing anything between $ signs as Latex when not intended to.
+        return response.get("output").replace("$", "\\$")
