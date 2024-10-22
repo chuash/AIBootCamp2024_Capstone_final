@@ -11,7 +11,10 @@ from langchain_cohere import CohereRerank
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.retrievers.contextual_compression import ContextualCompressionRetriever
-from langchain.retrievers.document_compressors import DocumentCompressorPipeline, EmbeddingsFilter
+from langchain.retrievers.document_compressors import (
+    DocumentCompressorPipeline,
+    EmbeddingsFilter,
+)
 
 from helper_functions import llm
 
@@ -46,18 +49,25 @@ def query_rewrite(query, temperature=0.3):
     """
 
     template = f"""Original question: {query}.\n
-    You are an AI language model assistant. You have access to a vector database containing information on the following:\n
-    1) Terms and conditions on sales and purchase of HDB resale flat - HDB resale process, option to purchase, declared resale price
-        request for flat valuation, acceptance of resale application, approval for resale, buyer eligibility to purchase,
-        housing loan from HDB and financial institution and so on.
-    2) Expenses to prepare on becoming a HDB home owner -  flat application, option fee by flat types, stamp duty, conveyancing fee
-        registration and microfilming, caveat registration, survey fee, fire insurance, Home Protection Scheme, HDB property tax,
-        service & conservancy charges
-    3) CPF housing grants for resale flats (families) - core family nucleus, eligibility conditions for family grant and top-up grant based
-        on household type, citizenship, age, household status (whether received prior housing subsidy/grant), monthly household income ceiling,
-        flat type, remaining lease of flat, ownership/interest in property (private residential/non-residential) in Singapore or overseas other than HDB flat.
+    You are an expert AI language model assistant. You have access to a vector database containing information on the following three topics:\n
+    1) Terms and conditions on sales and purchase of HDB resale flat.\n
+    Sub-topics mentioned in HDB resale terms and conditions include resale process, option to purchase, flat valuation, resale application,
+    bankruptcy, renovation inspection, outstanding HDB debts, approval for resale, completion of resale, cancellation of resale application,
+    false declaration, breach of conditions, eligibility to purchase, housing loan from HDB or bank, use of CPF savings, next steps after resale
+    completion and so on.
+    2) HDB option fee and housing expenses.\n 
+    Sub-topics mentioned as part of housing expenses include application fee, option fee, buyer stamp duty, conveyancing fee,
+    registration and microfilming, caveat registration, survey fee, fire insurance, Home Protection Scheme, property tax and
+    service & conservancy charges
+    3) CPF housing grants for resale flats (families).\n
+    Sub-topics covered under CPF housing grants include core family nucleus definition, eligibility conditions for Family Grant and Top-Up Grant based
+    on household type (couples, families, singles), citizenship, age, household status (whether received prior housing subsidy/grant), 
+    monthly household income ceiling, flat type, remaining lease of flat, ownership/interest in property (private residential/non-residential) 
+    in Singapore or overseas other than HDB flat.
 
-    Your task is to review the original user query and, if necessary, rephrase it to optimise retrieval quality of relevant documents from the vector database.
+    Your task is to REVIEW the original user query and rephrase it to OPTIMISE RETRIEVAL QUALITY of  documents from the vector database.
+    If you come across user query that is too broad or generic, rephrase the query to be narrower in scope, using sub-topics from the information
+    given above. Avoid subqueries within the rephrased query.
     By doing so, your goal is to help the user overcome some of the limitations of distance-based similarity search.
 
     Remember to provide your final answer enclosed within <>. For example, <your answer>
@@ -67,13 +77,20 @@ def query_rewrite(query, temperature=0.3):
     response = llm.get_completion(prompt=template, temperature=temperature)
     # to prevent streamlit from showing anything between $ signs as Latex when not intended to.
     response = response.replace("$", "\\$")
-    if re.search(r'\<(.*?)\>', response) is None:
+    if re.search(r"\<(.*?)\>", response) is None:
         return response
     else:
-        return re.search(r'\<(.*?)\>', response).group(1)
+        return re.search(r"\<(.*?)\>", response).group(1)
 
 
-def retrievalQA(query, embeddings_model, sys_msg, lang_model, diversity=0.7, similarity_threshold=0.5):
+def retrievalQA(
+    query,
+    embeddings_model,
+    sys_msg,
+    lang_model,
+    diversity=0.7,
+    similarity_threshold=0.5,
+):
     """This function takes in user query and check if it contains malicious activity. If ok,
     a vector store is initialised from the pre-generated chromadb. Contexts relevant to the query
     are then retrieved from the vector store and passed to the LLM, together with the
@@ -116,15 +133,18 @@ def retrievalQA(query, embeddings_model, sys_msg, lang_model, diversity=0.7, sim
 
     # Step 2b: Setting up advanced retriever, and add on to base retriever using contextual compression
     # Setting up Cohere reranker to rerank relevant documents
-    cohere_rerank = CohereRerank(model="rerank-english-v3.0", top_n=3)
+    cohere_rerank = CohereRerank(model="rerank-english-v3.0", top_n=4)
     # uses embeddings to drop unrelated documents below defined similarity threshold
-    embeddings_filter = EmbeddingsFilter(embeddings=embeddings_model,
-                                         similarity_threshold=similarity_threshold)
+    embeddings_filter = EmbeddingsFilter(
+        embeddings=embeddings_model, similarity_threshold=similarity_threshold
+    )
     # Combining embedding filtering and reranking with base MMR search
-    pipeline_compressor = DocumentCompressorPipeline(transformers=[embeddings_filter, cohere_rerank])
+    pipeline_compressor = DocumentCompressorPipeline(
+        transformers=[embeddings_filter, cohere_rerank]
+    )
     compression_retriever = ContextualCompressionRetriever(
-                            base_compressor=pipeline_compressor,
-                            base_retriever=base_retriever)
+        base_compressor=pipeline_compressor, base_retriever=base_retriever
+    )
 
     # Step 3: Creating the question and answer mechanism
     system_prompt = sys_msg

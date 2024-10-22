@@ -82,7 +82,7 @@ with col_topleft:
 with col_topright:
     # bar chart
     st.write(
-        "**1b. HDB Median Resale Prices($), by flat types, across locations and over time from 2020Q1**"
+        "**1b. HDB Median Resale Prices($), by flat types**"
     )
     # radio buttons to select either by location or period
     period_location = st.radio(
@@ -216,17 +216,25 @@ with col_midright:
 st.divider()
 
 form = st.form(key="ResaleSmartSearch")
-form.markdown("#### 2. ResaleSearch-Your Intelligent Search Partner")
+form.markdown("#### 2. ResaleSearch-Your Intelligent Q&A Partner")
 
 user_prompt_search = form.text_area(
-    """Unsure about HDB resale terms and conditions, CPF grants for resale flats
-    or expenses to prepare when becoming homeowner? Try searching here :""",
+    """Unsure about specific HDB resale terms and conditions, CPF housing grants for resale flats
+    or expenses to prepare when becoming homeowner? Try searching here: \n
+    Examples of queries:
+    -What are the details regarding the option fee and option period when purchasing a resale HDB flat?
+    -What are the terms and conditions for obtaining a housing loan from HDB for a resale flat?
+    -Can I cancel my HDB resale application?
+    -How is property tax calculated?
+    -What is the buyer stamp duty for purchasing an HDB resale flat?
+    -What is the maximum household income to qualify for CPF housing grants?
+    """,
     height=200,
     key="ResaleSmartSearch_text",
 )
 if form.form_submit_button("Try rephrasing query with AI"):
     with st.spinner("Generating query for your consideration"):
-        st.write(rag_retrieval.query_rewrite(user_prompt_search))
+        st.write(rag_retrieval.query_rewrite(user_prompt_search, temperature=0.8))
 if form.form_submit_button("Submit"):
     st.toast(f"Query Submitted - {user_prompt_search}")
     with st.spinner("Fetching results..."):
@@ -238,18 +246,19 @@ if form.form_submit_button("Submit"):
         )
         st.write(response)
         st.divider()
-        # if the user query is malicious or unrelated to the subject matter, skip displaying the context
+        # if the user query is malicious or unrelated to the subject matter, do nothing
         if sources is None or "I am sorry but I don't know" in response or len(sources) == 0:
             pass
         else:
-            for i, source in enumerate(sources):
-                # to prevent streamlit from showing anything between $ signs as Latex when not intended to.
-                retrieved_context = dict(source)['page_content'].replace("$", "\\$")
-                st.write(
-                    f"""*Source {i+1}*:  **Page {dict(source)['metadata']['source']}**,\
-                        \n"{retrieved_context}" """
-                )
-                st.divider()
+            with st.expander("*Expand to see sources*"):
+                for i, source in enumerate(sources):
+                    # to prevent streamlit from showing anything between $ signs as Latex when not intended to.
+                    retrieved_context = dict(source)['page_content'].replace("$", "\\$")
+                    st.write(
+                        f"""*Source {i+1}*:  **Page {dict(source)['metadata']['source']}**,\
+                            \n"{retrieved_context}" """
+                    )
+                    st.divider()
 
 form = st.form(key="renochatform")
 form.markdown("#### 3. RenoChat-Your Friendly Renovation Assistant")
