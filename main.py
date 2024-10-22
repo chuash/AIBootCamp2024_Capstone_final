@@ -91,8 +91,8 @@ with col_topright:
         key="period_loc_selector",
         horizontal=True,
         captions=[
-            "Prices over periods for a selected location",
-            "Prices over locations for a selection time period",
+            "Prices across periods (from 2020Q1) for a selected location",
+            "Prices across locations for a selected time period",
         ],
     )
     # if location is selected
@@ -215,63 +215,59 @@ with col_midright:
 
 st.divider()
 
-col_bottomleft, col_bottomright = st.columns(2, gap="medium")
+form = st.form(key="ResaleSmartSearch")
+form.markdown("#### 2. ResaleSearch-Your Intelligent Search Partner")
 
-with col_bottomright:
-    form = st.form(key="renochatform")
-    form.markdown("#### 3. RenoChat-Your Friendly Renovation Assistant")
+user_prompt_search = form.text_area(
+    """Unsure about HDB resale terms and conditions, CPF grants for resale flats
+    or expenses to prepare when becoming homeowner? Try searching here :""",
+    height=200,
+    key="ResaleSmartSearch_text",
+)
+if form.form_submit_button("Try rephrasing query with AI"):
+    with st.spinner("Generating query for your consideration"):
+        st.write(rag_retrieval.query_rewrite(user_prompt_search))
+if form.form_submit_button("Submit"):
+    st.toast(f"Query Submitted - {user_prompt_search}")
+    with st.spinner("Fetching results..."):
+        response, sources = rag_retrieval.retrievalQA(
+            user_prompt_search,
+            rag_retrieval.embeddings_model,
+            rag_retrieval.system_msg_search,
+            rag_retrieval.llm_,
+        )
+        st.write(response)
+        st.divider()
+        # if the user query is malicious or unrelated to the subject matter, skip displaying the context
+        if sources is None or "I am sorry but I don't know" in response or len(sources) == 0:
+            pass
+        else:
+            for i, source in enumerate(sources):
+                # to prevent streamlit from showing anything between $ signs as Latex when not intended to.
+                retrieved_context = dict(source)['page_content'].replace("$", "\\$")
+                st.write(
+                    f"""*Source {i+1}*:  **Page {dict(source)['metadata']['source']}**,\
+                        \n"{retrieved_context}" """
+                )
+                st.divider()
 
-    user_prompt_chat = form.text_area(
-        """Pose your renovation related queries here and the assistant\
-        will provide you with curated answers sourced from internet.
-        (NB: the AI bot has been told not to entertain any\
-        non-renovation related queries) :""",
-        height=200,
-        key="renochatform_text",
-    )
+form = st.form(key="renochatform")
+form.markdown("#### 3. RenoChat-Your Friendly Renovation Assistant")
 
-    if form.form_submit_button("Submit"):
-        st.toast(f"Query Submitted - {user_prompt_chat}")
-        with st.spinner("Fetching results..."):
-            response, memory = chatbot_response(
-                user_prompt_chat, st.session_state["chatbot_memory"]
-            )
-            st.session_state["chatbot_memory"] = memory
-            st.write(response)
+user_prompt_chat = form.text_area(
+    """Pose your renovation related queries here and the assistant\
+    will provide you with curated answers sourced from internet.
+    (NB: the AI bot has been told not to entertain any\
+    non-renovation related queries) :""",
+    height=200,
+    key="renochatform_text",
+)
 
-with col_bottomleft:
-    form = st.form(key="ResaleSmartSearch")
-    form.markdown("#### 2. ResaleSearch-Your Intelligent Search Partner")
-
-    user_prompt_search = form.text_area(
-        """Unsure about HDB resale terms and conditions, CPF grants for resale flats
-        or expenses to prepare when becoming homeowner? Try searching here :""",
-        height=200,
-        key="ResaleSmartSearch_text",
-    )
-    if form.form_submit_button("Try rephrasing query with AI"):
-        with st.spinner("Generating query for your consideration"):
-            st.write(rag_retrieval.query_rewrite(user_prompt_search))
-    if form.form_submit_button("Submit"):
-        st.toast(f"Query Submitted - {user_prompt_search}")
-        with st.spinner("Fetching results..."):
-            response, sources = rag_retrieval.retrievalQA(
-                user_prompt_search,
-                rag_retrieval.embeddings_model,
-                rag_retrieval.system_msg_search,
-                rag_retrieval.llm_,
-            )
-            st.write(response)
-            st.divider()
-            # if the user query is malicious or unrelated to the subject matter, skip displaying the context
-            if sources is None or "I am sorry but I don't know" in response or len(sources) == 0:
-                pass
-            else:
-                for i, source in enumerate(sources):
-                    # to prevent streamlit from showing anything between $ signs as Latex when not intended to.
-                    retrieved_context = dict(source)['page_content'].replace("$", "\\$")
-                    st.write(
-                        f"""*Source {i+1}*:  **Page {dict(source)['metadata']['source']}**,\
-                            \n"{retrieved_context}" """
-                    )
-                    st.divider()
+if form.form_submit_button("Submit"):
+    st.toast(f"Query Submitted - {user_prompt_chat}")
+    with st.spinner("Fetching results..."):
+        response, memory = chatbot_response(
+            user_prompt_chat, st.session_state["chatbot_memory"]
+        )
+        st.session_state["chatbot_memory"] = memory
+        st.write(response)
