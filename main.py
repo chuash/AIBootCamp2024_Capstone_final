@@ -34,7 +34,7 @@ if not check_password():
     st.stop()
 
 
-# Declaring functions relevant for visuals
+# Declaring functions relevant for visualisation
 @st.cache_data
 def load_data(directory="./data"):
     """This function loads all relevant datasets for visualisation
@@ -53,6 +53,7 @@ def load_data(directory="./data"):
     ]
     datalist = []
     for file in filelist:
+        # Read in all csv data
         df = pd.read_csv(f"{directory}/" + file)
         datalist.append(df)
     return datalist[0], datalist[1], datalist[2], datalist[3]
@@ -72,13 +73,16 @@ st.markdown(
 
 st.markdown("#### 1. ResaleStats - Your Insightful Data Illustrator")
 
+# Divide real estate into 2 columns
 col_topleft, col_topright = st.columns(2, gap="medium")
 
+# on the left
 with col_topleft:
     # line chart
     st.write("**1a. HDB Resale Price Index from 2004Q1 (index=100 in 2009Q1)**")
     st.line_chart(df1, x="quarter", y="index", x_label="quarter", y_label="Price Index")
 
+# on the right
 with col_topright:
     # bar chart
     st.write(
@@ -131,11 +135,11 @@ townoptions = st.multiselect(
     key="town_selector",
 )
 
+# Divide real estate into 2 columns
 col_midleft, col_midright = st.columns(2, gap="medium")
 
 with col_midleft:
     st.write("**1c. HDB Resale Transaction Details (Oct 2023-Oct 2024)**")
-    # st.sidebar.write("Filters for HDB Resale Transaction Details")
     fieldoptions = st.multiselect(
         "Select the fields to be displayed",
         options=df3.columns.tolist(),
@@ -162,26 +166,27 @@ with col_midleft:
     ]
     # display HDB Resale Transaction Details data as table visualisation
     st.dataframe(df3_filter, column_order=fieldoptions, key="pricedetails_df")
+
     # Widget for chatting with HDB Resale Transaction Details data
     form = st.form(key="ResaleTxnDetails")
     form.write("Chat with your data!")
-
     user_query_HDB = form.text_area(
         """Try querying the above HDB resale transaction details data in words""",
         height=30,
         key="ResaleTxnDetails_text",
     )
-
+    # when submit button is pressed
     if form.form_submit_button("Submit"):
         st.toast(f"Query Submitted - {user_query_HDB}")
         with st.spinner("Fetching results..."):
+            # response from data query agent
             response_HDB = agent.LLM_query_df(
                 user_query_HDB, df3_filter, agent.system_msg_HDB
             )
             st.write(response_HDB)
 
 with col_midright:
-    st.write("**1d. CEA Agent Transaction Details (Sep 2023-Oct 2024)**")
+    st.write("**1d. CEA Agent Transaction Details (Sep 2023-Sep 2024)**")
     # Subset CEA Agent Transaction Details dataset based on applied town filter
     df4_filter = df4[df4["town"].isin(townoptions)]
     # display CEA Agent Transaction Details data as table visualisation
@@ -195,16 +200,16 @@ with col_midright:
         ],
         key="CEAdetails_df",
     )
+    
     # Widget for chatting with CEA Agent Transaction Details data
     form = st.form(key="CEAAgentTxnDetails")
     form.write("Chat with your data!")
-
     user_query_CEA = form.text_area(
         """Try querying the above CEA agent transaction details data in words""",
         height=30,
         key="CEAAgentTxnDetails_text",
     )
-
+    # when submit button is pressed
     if form.form_submit_button("Submit"):
         st.toast(f"Query Submitted - {user_query_CEA}")
         with st.spinner("Fetching results..."):
@@ -220,18 +225,19 @@ form.markdown("#### 2. ResaleSearch-Your Intelligent Q&A Partner")
 
 user_prompt_search = form.text_area(
     """Unsure about specific HDB resale terms and conditions, CPF housing grants for resale flats
-    or expenses to prepare when becoming homeowner? Try searching here: \n
-    Examples of queries:
-    -What are the details regarding the option fee and option period when purchasing a resale HDB flat?
-    -What are the terms and conditions for obtaining a housing loan from HDB for a resale flat?
-    -Can I cancel my HDB resale application?
-    -How is property tax calculated?
-    -What is the buyer stamp duty for purchasing an HDB resale flat?
-    -What is the maximum household income to qualify for CPF housing grants?
+    or expenses to prepare when becoming homeowner? Try searching here:\n
+    Sample queries:
+    - What are the details regarding the option fee and option period when purchasing a resale HDB flat?
+    - What are the terms and conditions for obtaining a housing loan from HDB for a resale flat?
+    - Can I cancel my HDB resale application?
+    - How is property tax calculated?
+    - What is the buyer stamp duty for purchasing an HDB resale flat?
+    - What is the maximum household income to qualify for CPF housing grants?
     """,
     height=200,
     key="ResaleSmartSearch_text",
 )
+# When the rephrase query button is pressed
 if form.form_submit_button("Try rephrasing query with AI"):
     with st.spinner("Generating query for your consideration"):
         st.write(rag_retrieval.query_rewrite(user_prompt_search, temperature=0.8))
@@ -266,7 +272,7 @@ form.markdown("#### 3. RenoChat-Your Friendly Renovation Assistant")
 user_prompt_chat = form.text_area(
     """Pose your renovation related queries here and the assistant\
     will provide you with curated answers sourced from internet.
-    (NB: the AI bot has been told not to entertain any\
+    (NB: the assistant has been told not to entertain any\
     non-renovation related queries) :""",
     height=200,
     key="renochatform_text",

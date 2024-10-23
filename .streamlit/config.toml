@@ -3,13 +3,13 @@
 base = "light"
 
 # primary accent color for interactive elements
-primaryColor = "#F63366"
+primaryColor = "green"
 
 # Background color for the main content area.
 backgroundColor = "#E0F2F1"
 
 # Background color used for the sidebar and most interactive widgets.
-secondaryBackgroundColor = "#B2DFDB"
+secondaryBackgroundColor = "#88bdf2"
 
 # Color used for almost all text.
 textColor = "#262730"

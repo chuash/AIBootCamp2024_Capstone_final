@@ -71,9 +71,9 @@ def LLM_query_df(query, df, sys_msg, flag=True, model="gpt-4o-mini", temperature
     # few-shot examples for the LLM to learn
     # if data is related to HDB
     if flag:
-        good_user_message = "How many 3 room flats have been transacted in Tampines?"
+        good_user_message = "How many 3 room flats have been transacted in Tampines? What is the average resale price over past 6 months?"
     else:
-        good_user_message = "Who are the top 3 sales agent for Tampines?"
+        good_user_message = "Who are the top 3 sales agent for Tampines? Which real estate companies have most transactions in Ang Mo Kio?"
     bad_user_message = "What does CCCS stand for? Who is Obama?"
 
     messages = [
