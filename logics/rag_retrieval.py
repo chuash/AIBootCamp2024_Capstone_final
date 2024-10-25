@@ -36,38 +36,43 @@ system_msg_search = """<the_only_instruction>
     """
 
 
-def query_rewrite(query, temperature=0.3):
+def query_rewrite(query, temperature=0.5):
     """This function takes in the original user query, assesses if there is a
     need to rephrase, if so rewrite/rephrase the query so as to optimise the quality
     of document retrieval.
 
     Args:
-        question(str) : user original query
-        temperature(float) : temperature setting for LLM. Default to 0.3
+        query(str) : user original query
+        temperature(float) : temperature setting for LLM. Default to 0.5
     Returns:
         response(str) : rephrased query from LLM
     """
 
-    template = f"""Original question: {query}.\n
+    template = f"""Original question: ```{query}```.\n
     You are an expert AI language model assistant. You have access to a vector database containing information on the following three topics:\n
-    1) Terms and conditions on sales and purchase of HDB resale flat.\n
-    Sub-topics mentioned in HDB resale terms and conditions include resale process, option to purchase, flat valuation, resale application,
-    bankruptcy, renovation inspection, outstanding HDB debts, approval for resale, completion of resale, cancellation of resale application,
-    false declaration, breach of conditions, eligibility to purchase, housing loan from HDB or bank, use of CPF savings, next steps after resale
-    completion and so on.
+    1) Sales and purchase of HDB resale flat.\n
+        - HDB Resale Process; Option To Purchase; Flat Valuation
+        - Resale Application Acceptance; Grant of Approval for Resale; Cancellation of Resale Application; Next Steps after Resale Completion
+        - Renovation Inspection;  Outstanding HDB Debts; Bankruptcy Scenarios
+        - False Declaration; Breach of Conditions
+        - Eligibility to Purchase; Housing Loan from HDB or Bank; Use of CPF Savings
     2) HDB option fee and housing expenses.\n 
-    Sub-topics mentioned as part of housing expenses include application fee, option fee, buyer stamp duty, conveyancing fee,
-    registration and microfilming, caveat registration, survey fee, fire insurance, Home Protection Scheme, property tax and
-    service & conservancy charges
+        - Application fee; Option Fee; Buyer Stamp Duty; Conveyancing Fee
+        - Registration and Microfilming Fee; Caveat Registration Fee; Survey Fee
+        - Fire Insurance; Home Protection Scheme
+        - Property Tax; Service & Conservancy Charges
     3) CPF housing grants for resale flats (families).\n
-    Sub-topics covered under CPF housing grants include core family nucleus definition, eligibility conditions for Family Grant and Top-Up Grant based
-    on household type (couples, families, singles), citizenship, age, household status (whether received prior housing subsidy/grant), 
-    monthly household income ceiling, flat type, remaining lease of flat, ownership/interest in property (private residential/non-residential)
-    in Singapore or overseas other than HDB flat.
+        - Definition of Core Family Nucleus
+        - Family Grant and Top-Up Grant:
+            - Household Type (couples, families, singles); Citizenship; Age
+            - Household Status (whether received prior housing subsidy/grant)
+            - Household Income Ceiling; Flat Type; Remaining Flat Lease
+            - Ownership/Interest in property (private residential/non-residential) in Singapore or overseas other than HDB flat.
 
-    Your task is to REVIEW the original user query, THINK and REPHRASE it in the way you feel would be able to OPTIMISE RETRIEVAL QUALITY of documents
-    from the vector database. If you come across user query that is too broad or generic, REWRITE the query to be simple and narrower in scope,
-    using sub-topics from the information in the database. Avoid multiple subqueries within the rephrased query.
+    Your task is to REVIEW the original user query (enclosed within triple backticks), THINK and REPHRASE it in the way you feel would be able to
+    OPTIMISE RETRIEVAL QUALITY of documents from the vector database. If you come across user query that is too broad or generic, REWRITE the query
+    to be SIMPLE and VERY SPECIFIC in scope, using the information that you know exist in the database. NEVER pose multiple subqueries OR use generic
+    terms such as 'steps', 'processes' in your rephrased query.
     By doing so, your goal is to help the user overcome some of the limitations of distance-based similarity search.
 
     Remember to provide your final answer enclosed within <>. For example, <your answer>
@@ -77,6 +82,7 @@ def query_rewrite(query, temperature=0.3):
     response = llm.get_completion(prompt=template, temperature=temperature)
     # to prevent streamlit from showing anything between $ signs as Latex when not intended to.
     response = response.replace("$", "\\$")
+    # Extract the response enclosed within <>, if LLM fails to provide response within <>, just return whatever the response is
     if re.search(r"\<(.*?)\>", response) is None:
         return response
     else:
@@ -162,3 +168,7 @@ def retrievalQA(
 
     # returning both the response text and the underlying contexts. Escaping $ to prevent streamlit from showing anything between $ signs as Latex when not intended to.
     return response.get("answer").replace("$", "\\$"), response.get("context")
+
+
+if __name__ == "__main__":
+    pass

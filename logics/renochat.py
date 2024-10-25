@@ -34,8 +34,8 @@ def _message_summarise(messagelist):
     while also condensing the information into a format easy for you to understand. KEEP\
     the LENGTH of the summary to a MAXIMUM of 400 tokens"""
 
-    # getting response from LLM, capping the number of output tokens at 450.
-    response = llm.get_completion(prompt, max_tokens=450)
+    # getting response from LLM, capping the number of output tokens at 400.
+    response = llm.get_completion(prompt, max_tokens=400)
     return response
 
 
@@ -67,9 +67,6 @@ def chatbot_response(user_query, memory, max_output_token=300, history_max=1024)
 
     # Step 1: load the chatbot memory into the list of messages to be passed to LLM
     messages = memory
-    # with open(memory_filepath,'r') as file:
-    #    content = file.read()
-    #    messages = json.loads(content)
 
     # Step 2: Insert new user query
     messages.append(
@@ -93,8 +90,8 @@ def chatbot_response(user_query, memory, max_output_token=300, history_max=1024)
         messages = [messages[0]]
         messages.append({"role": "system", "content": summary})
 
-    # Step 5: save messages history to chatbot memory
-    # with open(memory_filepath, 'w') as file:
-    #    file.write(json.dumps(messages))
-
     return response, messages
+
+
+if __name__ == "__main__":
+    pass

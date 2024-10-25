@@ -12,7 +12,7 @@ st.subheader("ResaleStats")
 st.image(
     "./pages/images/ResaleStats.drawio.png",
     caption="Flow chart showing overall process flow for ResaleStats",
-    width=1024,
+    width=800,
 )
 st.write("""The 5 downloaded csv files were preprocesed before visualisation. The following details the data preprocessing steps. After preprocessing, visualisations
          , including filters, are created using standard streamlit functions.""")
@@ -69,3 +69,59 @@ st.image(
     caption="Flow chart showing overall process flow for ResaleSearch",
     width=1024,
 )
+RAG = """
+- Under the hood, *ResaleSearch* runs on Langchain's RAG techniques, OpenAI embeddings and OpenAI's LLM ('gpt-4o-mini'). A two-phase approach is adopted, Phase I prepares the knowledge to be
+  persisted as Chroma vector store on disk. Phase II is the run-time scenario when user submits a query and the most relevant contexts are retrieved from the vector store
+  to be passed on to the LLM to provide concise reply.\n
+
+**Phase I**
+- Scrape and load data from each of the three data sources into three langchain Document objects.
+- For each of the Document object:
+  - extract the metadata - 'source', 'title' and 'description'
+  - clean up text content by removing non-breaking space, tabs, unnecessary whitespaces and/or redundant multiple newlines
+  - filter away text content irrelevant to HDB resale knowledge
+- Split and chunk the three Document objects using RecursiveCharacterTextSplitter , with chunk size 1000 characters, chunk overlap of 200 characters
+- Splitted and chunked Document objects are then as Chroma vector store, on disk, at the data folder
+
+(For specific codes, refer to https://github.com/chuash/AIBootCamp2024_Capstone_final/blob/main/logics/rag_preretrieval.py)
+
+**Phase II**
+- At run time, user has the option to either input query as it is or to make use of 'gpt-4o-mini' to help with query rewriting.
+- Query rewriting involves a seperate OpenAI API call with a curated prompt to ask the LLM to review the original query and rephrase it in the way it feels would be able 
+  to optimise retrieval quality of documents from the underlying vector database. To help the LLM better assess, keywords from the sub-topics of the knowledge base are 
+  included in the curated prompt. The prompt makes use of delimiters to guard against potential prompt injection.
+- Once user submits the query, the query is first checked to determine if it is potentially malicious, if not, the Chroma vector store will be initialised from disk
+- Then the query will be run through a base retrieven that provides maximal marginal relevance search, returning the top 8 contexts (max) that meet the relevance and diversity
+  requirements
+- The contexts are then passed through a filter that uses embedding similarity to retain contexts that meet certain minimum similarity threshold
+- The filtered contexts are then passed to Cohere Reranker via API call to get the top 4 most relevant contexts.
+- These contexts and the user query is then passed to 'gpt-4o-mini' to assess if it has sufficient information to answer user query. If the LLM assesses that it
+  doesn't know the answer, or the retrieved contexts do not have the answer to the user query, it is prompted to say that "I am sorry but I don't know, please consider rephrasing or changing your query". 
+  It has also been prompted not to make up an answer.
+
+(For specific codes, refer to https://github.com/chuash/AIBootCamp2024_Capstone_final/blob/main/logics/rag_retrieval.py)
+"""
+st.write(RAG)
+
+st.subheader("RenoChat")
+st.image(
+    "./pages/images/Renochat.drawio.png",
+    caption="Flow chart showing overall process flow for Renochat",
+    width=800,
+)
+
+renochat="""
+- When the streamlit session first starts, Renochat's chat memory is initialised, as a session state variable, with its instruction system message.
+- This system message tells the LLM the character that it is to role-play and that it should only reply to queries that it thinks are related to renovation.
+- When user submits a query, the query is first checked to determine if it is potentially malicious, if not, the query is added to the chat memory.
+- The updated chat memory is then passed to LLM ('gpt-4o-mini') to get response (capped at 300 tokens). If the LLM assesses that the query is unrelated to 
+  renovation, it will reply something along the line that it is only supposed to respond to renovation related queries.
+- The LLM response is then appended to chat memory.
+- Check will be done to ensure that the accumulated chat history does not exceed the chat memory token threshold of 1024, if so, the entire chat history, excluding
+  the initial instruction system message, is summarised (via OpenAI API call to 'gpt-4o-mini') to a maximum of 400 tokens. This summary is then recombined with the
+  initial instruction system message.
+- The chat memory is then updated accordingly.
+
+(For specific codes, refer to https://github.com/chuash/AIBootCamp2024_Capstone_final/blob/main/logics/renochat.py)
+"""
+st.write(renochat)
