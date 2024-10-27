@@ -97,14 +97,14 @@ features = """
 	engine. The engine will then parse the queries, and attempt to provide relevant answers via combination of RAG techniques and OpenAI LLM. If relevant answers are found,
  	short summarised answers, up to maximum of four sentences, will be displayed, together with the top 4 most relevant sources/contexts where answers are derived from.\n
 	c) Should users need help to rephrase or refine their queries, users can click on the "Try rephrasing query with AI" button to get a prompt-engineered OpenAI LLM to rewrite
-	the query in such a way as to optimise retrieval quality.
-	d) Measures have been implemented to prevent the underlying OpenAI LLM from responding to malicious prompts or making up answers to queries irrelevant to the Chroma
+	the query in such a way as to optimise retrieval quality.\n
+	d) Measures have been implemented to prevent the underlying OpenAI LLM from responding to malicious prompts or rewriting queries irrelevant to the Chroma
 	vector database it has access to.
 
 3) *RenoChat*\n
 	a) This chatbot assistant aims to respond to users' renovation related queries with answers sourced from the internet. It is able to remember summarised history of chat
  	interactions (up to token limit of 1024) it had with the users at the individual session level. Whenever a new session is initiated, the chatbot history memory will be
-  	initialised from clean state with only the system message.\n
+  	initialised from clean state with only the initial system message.\n
 	b) Measures have been implemented to prevent the underlying OpenAI LLM from responding to malicious prompts or queries unrelated to home renovation.
 """
 st.write(features)

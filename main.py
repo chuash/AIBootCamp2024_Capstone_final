@@ -85,9 +85,7 @@ with col_topleft:
 # on the right
 with col_topright:
     # bar chart
-    st.write(
-        "**1b. HDB Median Resale Prices($), by flat types**"
-    )
+    st.write("**1b. HDB Median Resale Prices($), by flat types**")
     # radio buttons to select either by location or period
     period_location = st.radio(
         "2) Filter HDB median resale prices by: ",
@@ -200,7 +198,7 @@ with col_midright:
         ],
         key="CEAdetails_df",
     )
-    
+
     # Widget for chatting with CEA Agent Transaction Details data
     form = st.form(key="CEAAgentTxnDetails")
     form.write("Chat with your data!")
@@ -230,7 +228,7 @@ user_prompt_search = form.text_area(
     - What are the details regarding the option fee and option period when purchasing a resale HDB flat?
     - What are the terms and conditions for obtaining a housing loan from HDB for a resale flat?
     - Can I cancel my HDB resale application?
-    - How is property tax calculated?
+    - What is the cost and coverage of fire insurance for HDB resale flats?
     - What is the buyer stamp duty for purchasing an HDB resale flat?
     - What is the maximum household income to qualify for CPF housing grants?
     """,
@@ -249,17 +247,22 @@ if form.form_submit_button("Submit"):
             rag_retrieval.embeddings_model,
             rag_retrieval.system_msg_search,
             rag_retrieval.llm_,
+            similarity_threshold=0.4
         )
         st.write(response)
         st.divider()
         # if the user query is malicious or unrelated to the subject matter, do nothing
-        if sources is None or "I am sorry but I don't know" in response or len(sources) == 0:
+        if (
+            sources is None
+            or "I am sorry but I don't know" in response
+            or len(sources) == 0
+        ):
             pass
         else:
             with st.expander("*Expand to see sources*"):
                 for i, source in enumerate(sources):
                     # to prevent streamlit from showing anything between $ signs as Latex when not intended to.
-                    retrieved_context = dict(source)['page_content'].replace("$", "\\$")
+                    retrieved_context = dict(source)["page_content"].replace("$", "\\$")
                     st.write(
                         f"""*Source {i+1}*:  **Page {dict(source)['metadata']['source']}**,\
                             \n"{retrieved_context}" """

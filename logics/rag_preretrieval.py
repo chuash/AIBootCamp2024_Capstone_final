@@ -78,7 +78,7 @@ if __name__ == "__main__":
         metadata={key: metadata_hdb2[key] for key in ["source", "title", "description"]},
     )
 
-    # Combining the docs into a list of loaded documents
+    # Combining the Document objects into a list of loaded Documents
     docs = [doc_hdb1, doc_cpf, doc_hdb2]
 
     # Step 2: split the loaded documents into appropriate chunk length

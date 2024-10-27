@@ -54,8 +54,8 @@ def LLM_query_df(query, df, sys_msg, flag=True, model="gpt-4o-mini", temperature
         df (pd.DataFrame): pandas dataframe to query from
         sys_msg (str) : system message to be passed to LLM
         flag (boolean) : True - HDB, False - CEA. Defaults to True
-        model (str, optional): _description_. Defaults to "gpt-4o-mini".
-        temperature (int, optional): _description_. Defaults to 0.
+        model (str, optional): ID of the OpenAI LLM model to use. Defaults to "gpt-4o-mini".
+        temperature (float, optional): parameter that controls the randomness of LLM model’s predictions. Defaults to 0.
 
     Returns:
         str: response from LLM or templated response
@@ -69,19 +69,17 @@ def LLM_query_df(query, df, sys_msg, flag=True, model="gpt-4o-mini", temperature
     # Step 1 : Check if the query is relevant to the dataset
     system_msg = sys_msg
     # few-shot examples for the LLM to learn
-    # if data is related to HDB
+    # for HDB dataset
     if flag:
         good_user_message = "How many 3 room flats have been transacted in Tampines? What is the average resale price over past 6 months?"
+    # for CEA dataset
     else:
         good_user_message = "Who are the top 3 sales agent for Tampines? Which real estate companies have most transactions in Ang Mo Kio?"
     bad_user_message = "What does CCCS stand for? Who is Obama?"
 
     messages = [
             {"role": "system", "content": system_msg},
-            {
-                "role": "user",
-                "content": good_user_message,
-            },
+            {"role": "user", "content": good_user_message},
             {"role": "assistant", "content": "Y"},
             {"role": "user", "content": bad_user_message},
             {"role": "assistant", "content": "N"},

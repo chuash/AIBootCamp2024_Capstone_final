@@ -4,7 +4,7 @@ import hmac
 def check_password():
     """This functions provides password protection for the
     streamlit app. Returns `True` if the user had the correct password,
-    and user is allowed to access the stream app"""
+    and user is thus allowed to access the streamlit app"""
 
     def password_entered():
         """Checks whether a password entered by the user is correct."""

@@ -17,10 +17,10 @@ client = OpenAI(api_key=OPENAI_KEY)
 
 
 def get_embedding(input, model="text-embedding-3-small"):
-    """This is the function for generating embedding for input string
+    """This is the function for generating embedding for input message
 
     Args:
-        input (str): input text string or list of input text string
+        input (str|list): input message or list of input messages
         model (str, optional): embedding model. Defaults to 'text-embedding-3-small'.
 
     Returns:
@@ -39,21 +39,21 @@ def get_completion(
     n=1,
     json_output=False,
 ):
-    """This is the helper function for calling OpenAI LLM, with a single prompt
+    """This is the helper function for calling OpenAI LLM, with a single message
 
     Args:
-        prompt (str): input query
+        prompt (str): input message
         model (str, optional): ID of the OpenAI LLM model to use. Defaults to "gpt-4o-mini".
-        temperature (int, optional): parameter that controls the randomness of LLM model’s predictions. Defaults to 0.
+        temperature (float, optional): parameter that controls the randomness of LLM model’s predictions. Defaults to 0.
         top_p (float, optional): nucleus sampling. Defaults to 1.0.
-        max_tokens (int, optional): An upper bound for the number of tokens that can be generated . Defaults to 256.
+        max_tokens (int, optional): An upper bound for the number of tokens that can be generated . Defaults to 1024.
         n (int, optional): number of chat completion choices to generate. Defaults to 1.
         json_output (bool, optional): whether output format is in JSON. Defaults to False.
 
     Returns:
         str: LLM's textual response
     """
-    if json_output == True:
+    if json_output:
         output_json_structure = {"type": "json_object"}
     else:
         output_json_structure = None
@@ -80,9 +80,9 @@ def get_completion_by_messages(
     Args:
         messages (list): a list of messages between bot and user
         model (str, optional): ID of the OpenAI LLM model to use. Defaults to "gpt-4o-mini".
-        temperature (int, optional): parameter that controls the randomness of LLM model’s predictions. Defaults to 0.
+        temperature (float, optional): parameter that controls the randomness of LLM model’s predictions. Defaults to 0.
         top_p (float, optional): nucleus sampling. Defaults to 1.0.
-        max_tokens (int, optional): An upper bound for the number of tokens that can be generated . Defaults to 256.
+        max_tokens (int, optional): An upper bound for the number of tokens that can be generated . Defaults to 1024.
         n (int, optional): number of chat completion choices to generate. Defaults to 1.
 
     Returns:
@@ -100,12 +100,12 @@ def get_completion_by_messages(
 
 
 def count_tokens(text):
-    """This function is for calculating the tokens given the "message"
+    """This function is for calculating the tokens given the input message
     This is simplified implementation that is good enough for a rough
     estimation
 
     Args:
-        text (str): input text
+        text (str): input message
 
     Returns:
         int: number of tokens
@@ -133,7 +133,13 @@ def count_tokens_from_message(messages):
 
 def check_for_malicious_intent(user_message):
     """This function implements a malicious intentions detector,
-    applied on incoming user message.
+    applied on incoming messaege
+
+    Args:
+        user_message (str) : incoming message
+
+    Returns:
+        str: 'Y' or 'N'
     """
 
     system_message = """

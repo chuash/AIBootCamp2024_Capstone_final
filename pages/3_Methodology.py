@@ -89,11 +89,13 @@ RAG = """
 - At run time, user has the option to either input query as it is or to make use of 'gpt-4o-mini' to help with query rewriting.
 - Query rewriting involves a seperate OpenAI API call with a curated prompt to ask the LLM to review the original query and rephrase it in the way it feels would be able 
   to optimise retrieval quality of documents from the underlying vector database. To help the LLM better assess, keywords from the sub-topics of the knowledge base are 
-  included in the curated prompt. The prompt makes use of delimiters to guard against potential prompt injection.
-- Once user submits the query, the query is first checked to determine if it is potentially malicious, if not, the Chroma vector store will be initialised from disk
-- Then the query will be run through a base retrieven that provides maximal marginal relevance search, returning the top 8 contexts (max) that meet the relevance and diversity
-  requirements
-- The contexts are then passed through a filter that uses embedding similarity to retain contexts that meet certain minimum similarity threshold
+  included in the curated prompt. To prevent the query rewriting functionality from being exploited, the user query is first checked to determine if it is potentially malicious.
+  If not, the prompt asks the LLM to assess if the user query is related to the knowledge base. If somewhat relevant, the LLM proceeds with the query rewriting.
+- User can choose whether to make use of the re-written query by copying and pasting the query into the form.
+- Once user submits his query, the query is checked to determine if it is potentially malicious, if not malicious in nature, the Chroma vector store will be initialised from disk.
+- Then the query will be run through a base retriever that provides maximal marginal relevance search, returning the top 8 contexts (max) that meet the relevance and diversity
+  requirements.
+- The contexts are then passed through a filter that uses embedding similarity to retain contexts that meet certain minimum similarity threshold.
 - The filtered contexts are then passed to Cohere Reranker via API call to get the top 4 most relevant contexts.
 - These contexts and the user query is then passed to 'gpt-4o-mini' to assess if it has sufficient information to answer user query. If the LLM assesses that it
   doesn't know the answer, or the retrieved contexts do not have the answer to the user query, it is prompted to say that "I am sorry but I don't know, please consider rephrasing or changing your query". 
